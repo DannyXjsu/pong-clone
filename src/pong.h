@@ -67,13 +67,9 @@
 
 /**
  * @brief Player class.
- *
- * @param position Position of the player.
- * @param size Size of the player.
- * @param points Points/score of the player.
- * @param rect SDL rectangle of the player.
  */
 typedef struct {
+    /** Points/score of the player. */
     unsigned int points;
     // ## Sharing properties
     // Asserting
@@ -82,24 +78,23 @@ typedef struct {
                  "mismatches (Vector2 * 2)");
     union {
         struct {
+            /** Position of the player. */
             Vector2 position;
+            /** Size of the player. */
             Vector2 size;
         };
+        /** SDL rectangle of the player. */
         SDL_FRect rect;
     };
 } Player;
 
 /**
  * @brief Ball class.
- *
- * @param position Position of the ball.
- * @param size Size of the ball.
- * @param speed Speed of the ball.
- * @param velocity Velocity of the ball.
- * @param rect SDL rectangle of the ball.
  */
 typedef struct {
+    /** Speed of the ball. */
     float speed;
+    /** Velocity of the ball. */
     Vector2 velocity;
     // ## Sharing properties
     // Asserting
@@ -108,9 +103,12 @@ typedef struct {
                  "mismatches (Vector2 * 2)");
     union {
         struct {
+            /** Position of the ball. */
             Vector2 position;
+            /** Size of the ball. */
             Vector2 size;
         };
+        /** SDL rectangle of the ball. */
         SDL_FRect rect;
     };
 } Ball;
@@ -141,17 +139,22 @@ extern bool is_ball_touching_player(unsigned int _player);
 /**
  * @brief Event for when a player scores.
  */
-extern void scored(void);
+extern void score(void);
 
 /**
  * @brief Event for when the ball bounces.
  */
-extern void bounced(void);
+extern void bounce(void);
 
 /**
  * @brief Reset the ball to the center of the screen.
  */
 extern void reset_ball(void);
+
+/**
+ * @brief Reset players to their initial positions.
+ */
+extern void reset_players(void);
 
 /**
  * @brief Initialize players.

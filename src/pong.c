@@ -1,7 +1,10 @@
 #include "pong.h"
 #include "app.h"
+#include "math.h"
 
+#include <SDL3/SDL_stdinc.h>
 #include <math.h>
+#include <stdlib.h>
 
 float speed_shared = DEFAULT_PLAYER_SPEED;
 
@@ -15,8 +18,7 @@ inline void initialize_players() {
         player[i].size.x = 8.0f;
         player[i].size.y = 64.0f;
     }
-    player[PLAYER_ONE].position.x = 16.0;
-    player[PLAYER_TWO].position.x = (float)WINDOW_WIDTH - 16.0 - player[1].size.x;
+    reset_players();
 }
 
 inline void render_players(SDL_Renderer *renderer) {
@@ -27,24 +29,27 @@ inline void render_players(SDL_Renderer *renderer) {
 
 inline void initialize_ball() {
     ball.speed = DEFAULT_BALL_SPEED;
-    ball.position.x = ball.position.y = (float)WINDOW_HEIGHT / 2;
     ball.size.x = ball.size.y = 8;
 
-    ball.velocity.x = ball.speed;
-    ball.velocity.y = ball.speed / 4;
-    ball.velocity = normalize(&ball.velocity);
-    ball.velocity.x *= ball.speed;
-    ball.velocity.y *= ball.speed;
+    reset_ball();
 }
 
 inline void reset_ball() {
+    Vector2 direction = {(float)clamp(SDL_randf(), -0.5f, 0.5f), SDL_randf()};
     ball.position.x = (float)WINDOW_WIDTH / 2;
     ball.position.y = (float)WINDOW_HEIGHT / 2;
     ball.speed = DEFAULT_BALL_SPEED;
     // FIXME: Directions could be random
-    ball.velocity = normalize(&ball.velocity);
+    ball.velocity = normalize(&direction);
     ball.velocity.x *= ball.speed;
     ball.velocity.y *= ball.speed;
+}
+
+inline void reset_players() {
+    player[PLAYER_ONE].position.y = (float)WINDOW_HEIGHT / 2;
+    player[PLAYER_TWO].position.y = (float)WINDOW_HEIGHT / 2;
+    player[PLAYER_ONE].position.x = 16.0;
+    player[PLAYER_TWO].position.x = (float)WINDOW_WIDTH - 16.0 - player[PLAYER_TWO].size.x;
 }
 
 inline void render_ball(SDL_Renderer *renderer) {
@@ -56,21 +61,39 @@ extern void render_center_line(SDL_Renderer *renderer) {
                    (float)WINDOW_WIDTH / 2, WINDOW_HEIGHT);
 }
 
-inline void scored() {
+inline void score() {
+    const unsigned int _player = ball.velocity.x < 0.0f ? PLAYER_ONE : PLAYER_TWO;
+    player[_player].points++;
     ball.velocity.x = invertf(ball.velocity.x);
     speed_shared = DEFAULT_PLAYER_SPEED;
+
     reset_ball();
+    reset_players();
 }
 
 // FIXME: Add a little bit of randomness in the direction of the bounce to
 // prevent endless bouncing back and forth
-inline void bounced() {
-    ball.velocity.x = invertf(ball.velocity.x);
-    ball.speed += BALL_SPEED_GAIN_ON_BOUNCE;
-
-    speed_shared += PLAYER_SPEED_GAIN_ON_BOUNCE;
+// FIXME: The randomness thing from the FIXME above is somewhat implemented, there is no "randomness"
+// since it's just the factor of the distance from the player's center to the ball's position
+inline void bounce() {
+    const unsigned int _player = ball.velocity.x < 0.0f ? PLAYER_ONE : PLAYER_TWO;
+    const float player_center_ypos = player[_player].position.y + player[_player].size.y / 2;
+    float bounce_height_factor = (player_center_ypos - ball.position.y) / player[_player].size.y;
+    bounce_height_factor = bounce_height_factor * 2;
 
     ball.velocity = normalize(&ball.velocity);
+    Vector2 bounce_direction = {invertf(ball.velocity.x), -bounce_height_factor};
+
+    if (ball.position.y <
+            player[_player].position.y + player[_player].size.y / 2)
+        ball.velocity.y = -fabsf(ball.velocity.y);
+    else
+        ball.velocity.y = fabsf(ball.velocity.y);
+
+    ball.speed += BALL_SPEED_GAIN_ON_BOUNCE;
+    speed_shared += PLAYER_SPEED_GAIN_ON_BOUNCE;
+
+    ball.velocity = normalize(&bounce_direction);
     ball.velocity.x *= ball.speed;
     ball.velocity.y *= ball.speed;
 }
@@ -101,35 +124,22 @@ inline void process_ball(double delta_time) {
         ball.velocity.y = -fabsf(ball.velocity.y);
 
     // Detecting collision with players and wall
-    // Heading towards player 1
-    if (ball.velocity.x < 0.0f) {
+    if (ball.velocity.x < 0.0f) { // Heading towards player 1
         // If touching player
-        if (is_ball_touching_player(0)) {
-            if (ball.position.y <
-                    player[PLAYER_ONE].position.y + player[PLAYER_ONE].size.y / 2)
-                ball.velocity.y = -fabsf(ball.velocity.y);
-            else
-                ball.velocity.y = fabsf(ball.velocity.y);
-            bounced();
+        if (is_ball_touching_player(PLAYER_ONE)) {
+            bounce();
         } // If hit wall
         else if (ball.position.x + ball.size.x < 0.0f) {
-            player[PLAYER_TWO].points++;
-            scored();
+            score();
         }
     } else if (ball.velocity.x > 0.0f) { // Heading towards player 2
         // If touching player
-        if (is_ball_touching_player(1)) {
-            if (ball.position.y <
-                    player[PLAYER_TWO].position.y + player[PLAYER_TWO].size.y / 2)
-                ball.velocity.y = -fabsf(ball.velocity.y);
-            else
-                ball.velocity.y = fabsf(ball.velocity.y);
-            bounced();
+        if (is_ball_touching_player(PLAYER_TWO)) {
+            bounce();
         }
         // If hit wall
         else if (ball.position.x > WINDOW_WIDTH) {
-            player[PLAYER_ONE].points++;
-            scored();
+            score();
         }
     }
 }

@@ -65,4 +65,14 @@ extern float dot(Vector2 *vector1, Vector2 *vector2);
  */
 extern float invertf(float num);
 
+/**
+ * @brief Clamps a double value between a minimum and maximum value.
+ *
+ * @param d The value to clamp.
+ * @param min The minimum value.
+ * @param max The maximum value.
+ * @return The clamped value.
+ */
+extern double clamp(double d, double min, double max);
+
 #endif // MATH_H_
