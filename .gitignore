@@ -6,3 +6,5 @@ tmp/
 bin/
 debug/
 obj/
+html/
+latex/
