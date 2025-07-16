@@ -63,7 +63,7 @@
 /**
  * @brief Player speed gain on ball bounce.
  */
-#define PLAYER_SPEED_GAIN_ON_BOUNCE 0.05
+#define PLAYER_SPEED_GAIN_ON_BOUNCE 0.1
 
 /**
  * @brief Player class.

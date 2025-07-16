@@ -95,7 +95,7 @@ extern double invertd(double num);
 /**
  * @brief Clamps a integer value between a minimum and maximum value.
  *
- * @param d The value to clamp.
+ * @param n The value to clamp.
  * @param min The minimum value.
  * @param max The maximum value.
  * @return The clamped value.
@@ -105,7 +105,7 @@ extern int clampi(int n, int min, int max);
 /**
  * @brief Clamps a float value between a minimum and maximum value.
  *
- * @param d The value to clamp.
+ * @param n The value to clamp.
  * @param min The minimum value.
  * @param max The maximum value.
  * @return The clamped value.
@@ -115,7 +115,7 @@ extern float clampf(float n, float min, float max);
 /**
  * @brief Clamps a double value between a minimum and maximum value.
  *
- * @param d The value to clamp.
+ * @param n The value to clamp.
  * @param min The minimum value.
  * @param max The maximum value.
  * @return The clamped value.
@@ -125,7 +125,7 @@ extern double clampd(double n, double min, double max);
 /**
  * @brief Clamps a value between a minimum and maximum value.
  *
- * @param d The value to clamp.
+ * @param n The value to clamp.
  * @param min The minimum value.
  * @param max The maximum value.
  * @return The clamped value.

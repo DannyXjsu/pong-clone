@@ -1,3 +1,7 @@
+/**
+ * @file pong.c
+ */
+
 #include "pong.h"
 #include "app.h"
 #include "math.h"
@@ -39,7 +43,7 @@ inline void reset_ball() {
     ball.position.y = (float)WINDOW_HEIGHT / 2;
     ball.speed = DEFAULT_BALL_SPEED;
 
-    Vector2 direction = {clamp(SDL_randf(), -0.5f, 0.5f), SDL_randf()};
+    Vector2 direction = {clamp(rand() - RAND_MAX / 2, -1, 1), clamp(SDL_randf() - 0.5f, -0.5f, 0.5f)};
     ball.velocity = normalize(&direction);
     ball.velocity.x *= ball.speed;
     ball.velocity.y *= ball.speed;
@@ -62,7 +66,7 @@ extern void render_center_line(SDL_Renderer *renderer) {
 }
 
 inline void score() {
-    const unsigned int _player = ball.velocity.x < 0.0f ? PLAYER_ONE : PLAYER_TWO;
+    const unsigned int _player = ball.velocity.x > 0.0f ? PLAYER_ONE : PLAYER_TWO;
     player[_player].points++;
     ball.velocity.x = invert(ball.velocity.x);
     speed_shared = DEFAULT_PLAYER_SPEED;
@@ -99,6 +103,11 @@ inline void bounce() {
     ball.velocity = normalize(&bounce_direction);
     ball.velocity.x *= ball.speed;
     ball.velocity.y *= ball.speed;
+
+    if (_player == PLAYER_ONE)
+        ball.position.x = player[_player].position.x + player[_player].size.w;
+    else
+        ball.position.x = player[_player].position.x - ball.size.w;
 }
 
 // FIXME: This is a crude collision detection and fails to prevent skipping in
@@ -121,29 +130,22 @@ inline void process_ball(double delta_time) {
     }
 
     // Detecting collision with floor and ceiling
-    if (ball.position.y <= 0.0f)
+    if (ball.position.y <= 0.0f){
         ball.velocity.y = fabsf(ball.velocity.y);
-    else if (ball.position.y + ball.size.y >= WINDOW_HEIGHT)
+    }
+    else if (ball.position.y + ball.size.y >= WINDOW_HEIGHT){
         ball.velocity.y = -fabsf(ball.velocity.y);
+    }
 
     // Detecting collision with players and wall
-    if (ball.velocity.x < 0.0f) { // Heading towards player 1
-        // If touching player
-        if (is_ball_touching_player(PLAYER_ONE)) {
-            bounce();
-        } // If hit wall
-        else if (ball.position.x + ball.size.x < 0.0f) {
-            score();
-        }
-    } else if (ball.velocity.x > 0.0f) { // Heading towards player 2
-        // If touching player
-        if (is_ball_touching_player(PLAYER_TWO)) {
+    for (unsigned int i = 0; i < PLAYER_COUNT; i++){
+        if (is_ball_touching_player(i)){
             bounce();
         }
-        // If hit wall
-        else if (ball.position.x > WINDOW_WIDTH) {
-            score();
-        }
+    }
+    // If hit wall
+    if (ball.position.x + ball.size.x < 0.0f || ball.position.x > WINDOW_WIDTH) {
+       score();
     }
 }
 

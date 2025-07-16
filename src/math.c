@@ -1,3 +1,7 @@
+/**
+ * @file math.c
+ */
+
 #include <math.h>
 #include "math.h"
 

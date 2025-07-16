@@ -3,7 +3,7 @@
  * @brief Application definitions.
  *
  * @author DannyXjsu
- * @version 1.0
+ * @version 1.1
  * @date 2025-07-15
  */
 
@@ -41,30 +41,34 @@ extern unsigned long previous_time;
 extern unsigned long current_time;
 
 /**
- * @brief Initialize the application.
+ * @brief Processing status
  *
- * Initialize the application.
+ * If true, completely stops processing of app (excluding delta time calculation)
+ */
+extern bool pause;
+
+/**
+ * @brief Initialize the application.
  */
 extern void app_initialize(void);
 
 /**
+ * @brief Handle app inputs
+ */
+extern void app_handle_inputs(void *appstate, SDL_Event *event);
+
+/**
  * @brief Process the application.
- *
- * Process the application.
  */
 extern void app_process(void);
 
 /**
  * @brief Render the application.
- *
- * Render the application.
  */
 extern void app_render(SDL_Renderer *renderer);
 
 /**
  * @brief Finalize the application.
- *
- * Finalize the application.
  */
 extern void app_finalize(void);
 

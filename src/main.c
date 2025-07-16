@@ -38,6 +38,7 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
             return SDL_APP_SUCCESS; /* end the program, reporting success to the OS. */
         break;
     }
+    app_handle_inputs(appstate, event);
     return SDL_APP_CONTINUE; /* carry on with the program! */
 }
 

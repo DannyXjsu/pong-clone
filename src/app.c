@@ -1,9 +1,14 @@
+/**
+ * @file app.c
+ */
+
 #include "app.h"
 #include "pong.h"
 #include <SDL3/SDL_timer.h>
 
-Uint64 previous_time = 0;
-Uint64 current_time = 0;
+unsigned long previous_time = 0;
+unsigned long current_time = 0;
+bool pause = false;
 
 inline void app_initialize()
 {
@@ -14,6 +19,14 @@ inline void app_initialize()
     current_time = SDL_GetPerformanceCounter();
 }
 
+inline void app_handle_inputs(void *appstate, SDL_Event *event){
+    switch(event->type){
+        case SDL_EVENT_KEY_DOWN:
+            if (event->key.scancode == SDL_SCANCODE_ESCAPE)
+                pause = !pause;
+   }
+}
+
 inline void app_process()
 {
     // Getting delta time
@@ -21,7 +34,12 @@ inline void app_process()
     current_time = SDL_GetPerformanceCounter();
     // Usually the ticks or "counter" is multiplied by 1000 to convert ms to seconds, but that gives me weird results,
     // multiplying by 60 seems more stable and how it felt like using VSync
-    float dt = (double)((current_time - previous_time)*60 / (double)SDL_GetPerformanceFrequency());
+    const float dt = (double)((current_time - previous_time)*60 / (double)SDL_GetPerformanceFrequency());
+
+    // Handle pausing - literally haulting processing
+    if (pause){
+        return;
+    }
 
     process_players(dt);
     process_ball(dt);
