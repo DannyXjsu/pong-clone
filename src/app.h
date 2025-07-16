@@ -10,7 +10,6 @@
 #ifndef APP_H_
 #define APP_H_
 #include <SDL3/SDL_render.h>
-#include <SDL3/SDL_stdinc.h>
 
 /**
  * @brief Title of the window.
@@ -32,28 +31,28 @@
  *
  * The previous time of the process.
  */
-extern Uint64 previous_time;
+extern unsigned long previous_time;
 
 /**
  * @brief Current time.
  *
  * Current process time to calculate delta time.
  */
-extern Uint64 current_time;
+extern unsigned long current_time;
 
 /**
  * @brief Initialize the application.
  *
  * Initialize the application.
  */
-extern void app_initialize();
+extern void app_initialize(void);
 
 /**
  * @brief Process the application.
  *
  * Process the application.
  */
-extern void app_process();
+extern void app_process(void);
 
 /**
  * @brief Render the application.
@@ -67,6 +66,6 @@ extern void app_render(SDL_Renderer *renderer);
  *
  * Finalize the application.
  */
-extern void app_finalize();
+extern void app_finalize(void);
 
 #endif // APP_H_

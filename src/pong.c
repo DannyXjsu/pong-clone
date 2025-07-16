@@ -35,11 +35,11 @@ inline void initialize_ball() {
 }
 
 inline void reset_ball() {
-    Vector2 direction = {(float)clamp(SDL_randf(), -0.5f, 0.5f), SDL_randf()};
     ball.position.x = (float)WINDOW_WIDTH / 2;
     ball.position.y = (float)WINDOW_HEIGHT / 2;
     ball.speed = DEFAULT_BALL_SPEED;
-    // FIXME: Directions could be random
+
+    Vector2 direction = {clamp(SDL_randf(), -0.5f, 0.5f), SDL_randf()};
     ball.velocity = normalize(&direction);
     ball.velocity.x *= ball.speed;
     ball.velocity.y *= ball.speed;
@@ -64,7 +64,7 @@ extern void render_center_line(SDL_Renderer *renderer) {
 inline void score() {
     const unsigned int _player = ball.velocity.x < 0.0f ? PLAYER_ONE : PLAYER_TWO;
     player[_player].points++;
-    ball.velocity.x = invertf(ball.velocity.x);
+    ball.velocity.x = invert(ball.velocity.x);
     speed_shared = DEFAULT_PLAYER_SPEED;
 
     reset_ball();
@@ -74,7 +74,10 @@ inline void score() {
 // FIXME: Add a little bit of randomness in the direction of the bounce to
 // prevent endless bouncing back and forth
 // FIXME: The randomness thing from the FIXME above is somewhat implemented, there is no "randomness"
-// since it's just the factor of the distance from the player's center to the ball's position
+// since it's just the factor of the distance from the player's center to the ball's position, but
+// it makes it seem random
+// FIXME: I think the bounce factor is not center-aligned, so it just calculates from the top-left
+// of the ball, instead of center, but at least with the player is truly the center.
 inline void bounce() {
     const unsigned int _player = ball.velocity.x < 0.0f ? PLAYER_ONE : PLAYER_TWO;
     const float player_center_ypos = player[_player].position.y + player[_player].size.y / 2;
@@ -82,7 +85,7 @@ inline void bounce() {
     bounce_height_factor = bounce_height_factor * 2;
 
     ball.velocity = normalize(&ball.velocity);
-    Vector2 bounce_direction = {invertf(ball.velocity.x), -bounce_height_factor};
+    Vector2 bounce_direction = {invert(ball.velocity.x), -bounce_height_factor};
 
     if (ball.position.y <
             player[_player].position.y + player[_player].size.y / 2)

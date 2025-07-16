@@ -16,7 +16,17 @@ inline float invertf(float num){
     return num *= -1.0;
 }
 
-double clamp(double d, double min, double max) {
-  const double t = d < min ? min : d;
-  return t > max ? max : t;
+inline int clampi(int n, int min, int max) {
+    const int t = n < min ? min : n;
+    return t > max ? max : t;
+}
+
+inline float clampf(float n, float min, float max) {
+    const float t = n < min ? min : n;
+    return t > max ? max : t;
+}
+
+inline double clampd(double n, double min, double max) {
+    const double t = n < min ? min : n;
+    return t > max ? max : t;
 }
