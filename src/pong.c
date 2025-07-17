@@ -20,7 +20,7 @@ inline void initialize_players() {
         player[i].points = 0;
         player[i].position.y = (float)WINDOW_HEIGHT / 2;
         player[i].size.x = 8.0f;
-        player[i].size.y = 64.0f;
+        player[i].size.y = 80.0f;
     }
     reset_players();
 }

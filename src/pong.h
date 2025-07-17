@@ -16,57 +16,57 @@
 #include "math.h"
 
 /**
- * @brief Number of players in the game.
+ * Number of players in the game.
  */
 #define PLAYER_COUNT 2 // You probably don't want to change this
 
 /**
- * @brief Player one index.
+ * Player one index.
  */
 #define PLAYER_ONE 0
 
 /**
- * @brief Player two index.
+ * Player two index.
  */
 #define PLAYER_TWO 1
 
 /**
- * @brief Default speed of the ball.
+ * Default speed of the ball.
  */
 #define DEFAULT_BALL_SPEED 4.0
 
 /**
- * @brief Speed gain on ball bounce.
+ * Speed gain on ball bounce.
  */
 #define BALL_SPEED_GAIN_ON_BOUNCE 0.5
 
 /**
- * @brief Size in pixels of the ball.
+ * Size in pixels of the ball.
  */
 #define BALL_SIZE 8
 
 /**
- * @brief Starting position of the ball on the X-axis.
+ * Starting position of the ball on the X-axis.
  */
 #define BALL_START_POSITION_X WINDOW_HEIGHT/2
 
 /**
- * @brief Starting position of the ball on the Y-axis.
+ * Starting position of the ball on the Y-axis.
  */
 #define BALL_START_POSITION_Y BALL_START_POSITION_X
 
 /**
- * @brief Default speed of the player.
+ * Default speed of the player.
  */
 #define DEFAULT_PLAYER_SPEED 8.0
 
 /**
- * @brief Player speed gain on ball bounce.
+ * Player speed gain on ball bounce.
  */
 #define PLAYER_SPEED_GAIN_ON_BOUNCE 0.1
 
 /**
- * @brief Player class.
+ * Player class.
  */
 typedef struct {
     /** Points/score of the player. */
@@ -89,7 +89,7 @@ typedef struct {
 } Player;
 
 /**
- * @brief Ball class.
+ * Ball class.
  */
 typedef struct {
     /** Speed of the ball. */
@@ -114,90 +114,98 @@ typedef struct {
 } Ball;
 
 /**
- * @brief Players array.
+ * Players array.
  */
 extern Player player[PLAYER_COUNT];
 
 /**
- * @brief Ball instance.
+ * Ball instance.
  */
 extern Ball ball;
 
 /**
- * @brief Shared (between players) speed value.
+ * Shared (between players) speed value.
  */
 extern float speed_shared;
 
 /**
- * @brief Check if the ball is touching a player.
+ * Check if the ball is touching a player.
  *
- * @param _player Player index.
- * @return true if the ball is touching the player, false otherwise.
+ * Args:
+ *     _player: Player index.
+ *
+ * Returns:
+ *     True if the ball is touching the player, false otherwise.
  */
 extern bool is_ball_touching_player(unsigned int _player);
 
 /**
- * @brief Event for when a player scores.
+ * Event for when a player scores.
  */
 extern void score(void);
 
 /**
- * @brief Event for when the ball bounces.
+ * Event for when the ball bounces.
  */
 extern void bounce(void);
 
 /**
- * @brief Reset the ball to the center of the screen.
+ * Reset the ball to the center of the screen.
  */
 extern void reset_ball(void);
 
 /**
- * @brief Reset players to their initial positions.
+ * Reset players to their initial positions.
  */
 extern void reset_players(void);
 
 /**
- * @brief Initialize players.
+ * Initialize players.
  */
 extern void initialize_players(void);
 
 /**
- * @brief Initialize ball.
+ * Initialize ball.
  */
 extern void initialize_ball(void);
 
 /**
- * @brief Process the ball.
+ * Process the ball.
  *
- * @param delta_time Time since last frame.
+ * Args:
+ *     delta_time: Time since last frame.
  */
 extern void process_ball(double delta_time);
 
 /**
- * @brief Process players.
+ * Process players.
  *
- * @param delta_time Time since last frame.
+ * Args:
+ *     delta_time: Time since last frame.
  */
 extern void process_players(double delta_time);
 
 /**
- * @brief Render players.
+ * Render players.
  *
- * @param renderer SDL renderer instance.
+ * Args:
+ *     renderer: SDL renderer instance.
  */
 extern void render_players(SDL_Renderer *renderer);
 
 /**
- * @brief Render ball.
+ * Render ball.
  *
- * @param renderer SDL renderer instance.
+ * Args:
+ *     renderer: SDL renderer instance.
  */
 extern void render_ball(SDL_Renderer *renderer);
 
 /**
- * @brief Render center line.
+ * Render center line.
  *
- * @param renderer SDL renderer instance.
+ * Args:
+ *     renderer: SDL renderer instance.
  */
 extern void render_center_line(SDL_Renderer *renderer);
 

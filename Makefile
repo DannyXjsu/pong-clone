@@ -64,6 +64,19 @@ clean:
 	@echo CLEAN $(CLEAN_LIST)
 	@rm -f $(CLEAN_LIST)
 
+.PHONY: cleandir
+cleandir:
+	@echo CLEAN $(BIN_PATH) $(OBJ_PATH) $(DBG_PATH)
+	@rm -rf $(BIN_PATH) $(OBJ_PATH) $(DBG_PATH)
+
+.PHONY: cleandox
+cleandox:
+	@echo CLEAN docs html latex site
+	@rm -rf docs html latex site
+
+.PHONY: cleanall
+cleanall: clean cleandir cleandox
+
 .PHONY: distclean
 distclean:
 	@echo CLEAN $(DISTCLEAN_LIST)

@@ -1,6 +1,6 @@
 /**
  * @file app.h
- * @brief Application definitions.
+ * Application definitions.
  *
  * @author DannyXjsu
  * @version 1.1
@@ -12,63 +12,71 @@
 #include <SDL3/SDL_render.h>
 
 /**
- * @brief Title of the window.
+ * Title of the window.
  */
 #define WINDOW_TITLE "Pong Clone"
 
 /**
- * @brief Width of the window.
+ * Width of the window.
  */
 #define WINDOW_WIDTH 640
 
 /**
- * @brief Height of the window.
+ * Height of the window.
  */
 #define WINDOW_HEIGHT 480
 
 /**
- * @brief Previous time.
- *
+ * Scale of debug text displayed
+ */
+#define TEXT_SCALE 2.0
+
+/**
  * The previous time of the process.
  */
 extern unsigned long previous_time;
 
 /**
- * @brief Current time.
- *
  * Current process time to calculate delta time.
  */
 extern unsigned long current_time;
 
 /**
- * @brief Processing status
+ * Processing status
  *
- * If true, completely stops processing of app (excluding delta time calculation)
+ * If true, completely stops processing of app (excluding delta time calculation).
  */
 extern bool pause;
 
 /**
- * @brief Initialize the application.
+ * Initialize the application.
  */
 extern void app_initialize(void);
 
 /**
- * @brief Handle app inputs
+ * Handle app inputs
+ *
+ * Args:
+ *     *appstate: SDL3 App state.
+ *     *event: SDL3 Event struct.
  */
 extern void app_handle_inputs(void *appstate, SDL_Event *event);
 
 /**
- * @brief Process the application.
+ * Process the application.
  */
 extern void app_process(void);
 
 /**
- * @brief Render the application.
+ * Render the application.
+ *
+ * Args:
+ *     *renderer: SDL3 Renderer struct.
  */
 extern void app_render(SDL_Renderer *renderer);
 
 /**
- * @brief Finalize the application.
+ * Finalize the application.
  */
 extern void app_finalize(void);
 

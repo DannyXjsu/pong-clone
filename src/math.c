@@ -16,8 +16,20 @@ inline Vector2 normalize(Vector2 *vector) {
     return (Vector2){vector->x / _length, vector->y / _length};
 }
 
+inline float dot(Vector2 *vector1, Vector2 *vector2){
+    return vector1->x * vector2->x + vector1->y * vector2->y;
+}
+
+inline int inverti(int num){
+    return num *= -1;
+}
+
 inline float invertf(float num){
-    return num *= -1.0;
+    return num *= -1.0f;
+}
+
+inline double invertd(double num){
+    return num *= (double)-1.0;
 }
 
 inline int clampi(int n, int min, int max) {

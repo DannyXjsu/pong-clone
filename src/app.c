@@ -4,14 +4,14 @@
 
 #include "app.h"
 #include "pong.h"
+#include <SDL3/SDL_render.h>
 #include <SDL3/SDL_timer.h>
 
 unsigned long previous_time = 0;
 unsigned long current_time = 0;
 bool pause = false;
 
-inline void app_initialize()
-{
+inline void app_initialize() {
     // Initialize pong stuff
     initialize_players();
     initialize_ball();
@@ -27,8 +27,7 @@ inline void app_handle_inputs(void *appstate, SDL_Event *event){
    }
 }
 
-inline void app_process()
-{
+inline void app_process() {
     // Getting delta time
     previous_time = current_time;
     current_time = SDL_GetPerformanceCounter();
@@ -45,8 +44,7 @@ inline void app_process()
     process_ball(dt);
 }
 
-inline void app_render(SDL_Renderer *renderer)
-{
+inline void app_render(SDL_Renderer *renderer) {
     // Render the application
     SDL_SetRenderDrawColorFloat(
         renderer, 0.0, 0.0, 0.0,
@@ -56,13 +54,18 @@ inline void app_render(SDL_Renderer *renderer)
     SDL_RenderClear(renderer);
     SDL_SetRenderDrawColorFloat(renderer, 1.0, 1.0, 1.0, SDL_ALPHA_OPAQUE_FLOAT);
 
-    SDL_SetRenderScale(renderer, 2.0, 2.0);
+    SDL_SetRenderScale(renderer, TEXT_SCALE, TEXT_SCALE);
 
-    SDL_RenderDebugTextFormat(renderer, (((float)WINDOW_WIDTH) / 3) / 2, 16,
+    SDL_RenderDebugTextFormat(renderer, (((float)WINDOW_WIDTH) / 3) / TEXT_SCALE, 16,
                               "%u", player[0].points);
     SDL_RenderDebugTextFormat(renderer,
-                              (WINDOW_WIDTH - ((float)WINDOW_WIDTH) / 3) / 2, 16,
+                              (WINDOW_WIDTH - ((float)WINDOW_WIDTH) / 3) / TEXT_SCALE, 16,
                               "%u", player[1].points);
+
+    // Inform the players the game is paused
+    if (pause){
+        SDL_RenderDebugText(renderer, ((float)WINDOW_WIDTH/2 - 70) / TEXT_SCALE, ((float)WINDOW_HEIGHT/2 - 16) / TEXT_SCALE, "Game Paused");
+    }
 
     SDL_SetRenderScale(renderer, 1, 1);
 
@@ -74,7 +77,6 @@ inline void app_render(SDL_Renderer *renderer)
     SDL_RenderPresent(renderer);
 }
 
-inline void app_finalize()
-{
+inline void app_finalize() {
     // Finalize the application
 }
