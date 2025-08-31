@@ -131,11 +131,8 @@ extern float speed_shared;
 /**
  * Check if the ball is touching a player.
  *
- * Args:
- *     _player: Player index.
- *
- * Returns:
- *     True if the ball is touching the player, false otherwise.
+ * @param _player Player index.
+ * @return True if the ball is touching the player, false otherwise.
  */
 extern bool is_ball_touching_player(unsigned int _player);
 
@@ -172,40 +169,35 @@ extern void initialize_ball(void);
 /**
  * Process the ball.
  *
- * Args:
- *     delta_time: Time since last frame.
+ * @param delta_time Time since last frame.
  */
 extern void process_ball(double delta_time);
 
 /**
  * Process players.
  *
- * Args:
- *     delta_time: Time since last frame.
+ * @param delta_time Time since last frame.
  */
 extern void process_players(double delta_time);
 
 /**
  * Render players.
  *
- * Args:
- *     renderer: SDL renderer instance.
+ * @param renderer SDL renderer instance.
  */
 extern void render_players(SDL_Renderer *renderer);
 
 /**
  * Render ball.
  *
- * Args:
- *     renderer: SDL renderer instance.
+ * @param renderer SDL renderer instance.
  */
 extern void render_ball(SDL_Renderer *renderer);
 
 /**
  * Render center line.
  *
- * Args:
- *     renderer: SDL renderer instance.
+ * @param renderer SDL renderer instance.
  */
 extern void render_center_line(SDL_Renderer *renderer);
 

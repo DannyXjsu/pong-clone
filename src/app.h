@@ -1,6 +1,6 @@
 /**
  * @file app.h
- * Application definitions.
+ * @brief Application definitions.
  *
  * @author DannyXjsu
  * @version 1.1
@@ -56,9 +56,8 @@ extern void app_initialize(void);
 /**
  * Handle app inputs
  *
- * Args:
- *     *appstate: SDL3 App state.
- *     *event: SDL3 Event struct.
+ * @param appstate SDL3 App state.
+ * @param event SDL3 Event struct.
  */
 extern void app_handle_inputs(void *appstate, SDL_Event *event);
 
@@ -70,8 +69,7 @@ extern void app_process(void);
 /**
  * Render the application.
  *
- * Args:
- *     *renderer: SDL3 Renderer struct.
+ * @param renderer SDL3 Renderer struct.
  */
 extern void app_render(SDL_Renderer *renderer);
 

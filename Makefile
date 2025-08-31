@@ -59,6 +59,10 @@ all: $(TARGET)
 .PHONY: debug
 debug: $(TARGET_DEBUG)
 
+.PHONY: docs
+docs:
+	@cd docs && $(MAKE)
+
 .PHONY: clean
 clean:
 	@echo CLEAN $(CLEAN_LIST)
@@ -74,8 +78,8 @@ cleandox:
 	@echo CLEAN docs html latex site
 	@rm -rf docs html latex site
 
-.PHONY: cleanall
-cleanall: clean cleandir cleandox
+#.PHONY: cleanall
+#cleanall: clean cleandir cleandox
 
 .PHONY: distclean
 distclean:
