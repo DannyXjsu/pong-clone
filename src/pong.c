@@ -5,6 +5,7 @@
 #include "pong.h"
 #include "app.h"
 #include "math.h"
+#include "utils.h"
 
 #include <SDL3/SDL_stdinc.h>
 #include <math.h>
@@ -15,7 +16,10 @@ float speed_shared = DEFAULT_PLAYER_SPEED;
 Player player[PLAYER_COUNT];
 Ball ball;
 
-inline void initialize_players() {
+/**
+ * Initialize players.
+ */
+static inline void initialize_players() {
     for (unsigned int i = 0; i < PLAYER_COUNT; i++) {
         player[i].points = 0;
         player[i].position.y = (float)WINDOW_HEIGHT / 2;
@@ -25,17 +29,19 @@ inline void initialize_players() {
     reset_players();
 }
 
-inline void render_players(SDL_Renderer *renderer) {
-    for (unsigned int i = 0; i < PLAYER_COUNT; i++) {
-        SDL_RenderFillRect(renderer, &player[i].rect);
-    }
-}
-
-inline void initialize_ball() {
+/**
+ * Initialize ball.
+ */
+static inline void initialize_ball() {
     ball.speed = DEFAULT_BALL_SPEED;
     ball.size.x = ball.size.y = 8;
 
     reset_ball();
+}
+
+inline void pong_initialize(){
+    initialize_ball();
+    initialize_players();
 }
 
 inline void reset_ball() {
@@ -56,13 +62,59 @@ inline void reset_players() {
     player[PLAYER_TWO].position.x = (float)WINDOW_WIDTH - 16.0 - player[PLAYER_TWO].size.x;
 }
 
-inline void render_ball(SDL_Renderer *renderer) {
-    SDL_RenderFillRect(renderer, &ball.rect);
+/**
+ * Render players.
+ *
+ * @param renderer SDL renderer instance.
+ */
+static inline void draw_players(SDL_Renderer *renderer) {
+    for (unsigned int i = 0; i < PLAYER_COUNT; i++) {
+        SDL_FRect rect = vec_to_rect(&player[i].position, &player[i].size);
+        SDL_RenderFillRect(renderer, &rect);
+    }
 }
 
-extern void render_center_line(SDL_Renderer *renderer) {
+/**
+ * Render ball.
+ *
+ * @param renderer SDL renderer instance.
+ */
+static inline void draw_ball(SDL_Renderer *renderer) {
+    SDL_FRect rect = vec_to_rect(&ball.position, &ball.size);
+    SDL_RenderFillRect(renderer, &rect);
+}
+
+/**
+ * Render center line.
+ *
+ * @param renderer SDL renderer instance.
+ */
+static inline void draw_center_line(SDL_Renderer *renderer) {
     SDL_RenderLine(renderer, (float)WINDOW_WIDTH / 2, 0.0f,
                    (float)WINDOW_WIDTH / 2, WINDOW_HEIGHT);
+}
+
+inline void pong_render(){
+    SDL_Renderer* renderer = app_get_renderer();
+
+    // Set foreground color
+    SDL_SetRenderDrawColorFloat(renderer, 1.0, 1.0, 1.0, SDL_ALPHA_OPAQUE_FLOAT);
+    app_set_scale(TEXT_SCALE);
+    // Render player points counter
+    app_draw_text((Vector2){WINDOW_WIDTH / 3, 32}, TEXT_SCALE, "%u", player[0].points);
+    app_draw_text((Vector2){WINDOW_WIDTH - WINDOW_WIDTH / 3, 32}, TEXT_SCALE, "%u", player[1].points);
+
+    // Inform the players the game is paused
+    if (pause){
+        //SDL_RenderDebugText(renderer, ((float)WINDOW_WIDTH/2 - 70) / TEXT_SCALE, ((float)WINDOW_HEIGHT/2 - 16) / TEXT_SCALE, "Game Paused");
+        app_draw_text((Vector2){((float)WINDOW_WIDTH/2 - 70), ((float)WINDOW_HEIGHT/2 - 16)}, TEXT_SCALE, "Game Paused");
+    }
+
+    app_set_scale(1.0);
+
+    draw_players(renderer);
+    draw_ball(renderer);
+    draw_center_line(renderer);
 }
 
 inline void score() {
@@ -123,7 +175,12 @@ inline bool is_ball_touching_player(unsigned int _player) {
         ball.position.y < player[_player].position.y + player[_player].size.y);
 }
 
-inline void process_ball(double delta_time) {
+/**
+ * Process the ball.
+ *
+ * @param delta_time Time since last frame.
+ */
+static inline void process_ball(double delta_time) {
     // Applying velocity and such
     for (unsigned int i = 0; i < 2; i++) {
         ball.position.v[i] += ball.velocity.v[i] * delta_time;
@@ -149,10 +206,14 @@ inline void process_ball(double delta_time) {
     }
 }
 
-inline void process_players(double delta_time) {
+/**
+ * Process players.
+ *
+ * @param delta_time Time since last frame.
+ */
+static inline void process_players(double delta_time) {
     // Get inputs
-    SDL_PumpEvents();
-    const bool *keys = SDL_GetKeyboardState(NULL);
+    const bool *keys = app_get_input_keys();
     // Player 1
     if (keys[SDL_SCANCODE_W])
         player[PLAYER_ONE].position.y -= speed_shared * delta_time;
@@ -171,4 +232,10 @@ inline void process_players(double delta_time) {
         else if (player[i].position.y + player[i].size.y > WINDOW_HEIGHT)
             player[i].position.y = WINDOW_HEIGHT - player[i].size.y;
     }
+}
+
+inline void pong_process(){
+    const float dt = app_get_delta_time();
+    process_ball(dt);
+    process_players(dt);
 }

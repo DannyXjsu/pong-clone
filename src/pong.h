@@ -71,20 +71,11 @@
 typedef struct {
     /** Points/score of the player. */
     unsigned int points;
-    // ## Sharing properties
-    // Asserting
-    _Static_assert(sizeof(SDL_FRect) == sizeof(Vector2) * 2,
-                 "Player struct union layout is incompatible, SDL_FRect "
-                 "mismatches (Vector2 * 2)");
-    union {
-        struct {
-            /** Position of the player. */
-            Vector2 position;
-            /** Size of the player. */
-            Vector2 size;
-        };
-        /** SDL rectangle of the player. */
-        SDL_FRect rect;
+    struct {
+        /** Position of the player. */
+        Vector2 position;
+        /** Size of the player. */
+        Vector2 size;
     };
 } Player;
 
@@ -96,20 +87,11 @@ typedef struct {
     float speed;
     /** Velocity of the ball. */
     Vector2 velocity;
-    // ## Sharing properties
-    // Asserting
-    _Static_assert(sizeof(SDL_FRect) == sizeof(Vector2) * 2,
-                 "Player struct union layout is incompatible, SDL_FRect "
-                 "mismatches (Vector2 * 2)");
-    union {
-        struct {
-            /** Position of the ball. */
-            Vector2 position;
-            /** Size of the ball. */
-            Vector2 size;
-        };
-        /** SDL rectangle of the ball. */
-        SDL_FRect rect;
+    struct {
+        /** Position of the ball. */
+        Vector2 position;
+        /** Size of the ball. */
+        Vector2 size;
     };
 } Ball;
 
@@ -156,49 +138,10 @@ extern void reset_ball(void);
  */
 extern void reset_players(void);
 
-/**
- * Initialize players.
- */
-extern void initialize_players(void);
+extern void pong_initialize();
 
-/**
- * Initialize ball.
- */
-extern void initialize_ball(void);
+extern void pong_process();
 
-/**
- * Process the ball.
- *
- * @param delta_time Time since last frame.
- */
-extern void process_ball(double delta_time);
-
-/**
- * Process players.
- *
- * @param delta_time Time since last frame.
- */
-extern void process_players(double delta_time);
-
-/**
- * Render players.
- *
- * @param renderer SDL renderer instance.
- */
-extern void render_players(SDL_Renderer *renderer);
-
-/**
- * Render ball.
- *
- * @param renderer SDL renderer instance.
- */
-extern void render_ball(SDL_Renderer *renderer);
-
-/**
- * Render center line.
- *
- * @param renderer SDL renderer instance.
- */
-extern void render_center_line(SDL_Renderer *renderer);
+extern void pong_render();
 
 #endif // PONG_H_
