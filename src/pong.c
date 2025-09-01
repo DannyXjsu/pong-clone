@@ -22,7 +22,7 @@ Ball ball;
 static inline void initialize_players() {
     for (unsigned int i = 0; i < PLAYER_COUNT; i++) {
         player[i].points = 0;
-        player[i].position.y = (float)WINDOW_HEIGHT / 2;
+        player[i].position.y = (float)window_height / 2;
         player[i].size.x = 8.0f;
         player[i].size.y = 80.0f;
     }
@@ -45,8 +45,8 @@ inline void pong_initialize(){
 }
 
 inline void reset_ball() {
-    ball.position.x = (float)WINDOW_WIDTH / 2;
-    ball.position.y = (float)WINDOW_HEIGHT / 2;
+    ball.position.x = (float)window_width / 2;
+    ball.position.y = (float)window_height / 2;
     ball.speed = DEFAULT_BALL_SPEED;
 
     Vector2 direction = {clamp(rand() - RAND_MAX / 2, -1, 1), clamp(SDL_randf() - 0.5f, -0.5f, 0.5f)};
@@ -56,10 +56,10 @@ inline void reset_ball() {
 }
 
 inline void reset_players() {
-    player[PLAYER_ONE].position.y = (float)WINDOW_HEIGHT / 2;
-    player[PLAYER_TWO].position.y = (float)WINDOW_HEIGHT / 2;
+    player[PLAYER_ONE].position.y = (float)window_height / 2;
+    player[PLAYER_TWO].position.y = (float)window_height / 2;
     player[PLAYER_ONE].position.x = 16.0;
-    player[PLAYER_TWO].position.x = (float)WINDOW_WIDTH - 16.0 - player[PLAYER_TWO].size.x;
+    player[PLAYER_TWO].position.x = (float)window_width - 16.0 - player[PLAYER_TWO].size.x;
 }
 
 /**
@@ -71,6 +71,14 @@ static inline void draw_players(SDL_Renderer *renderer) {
     for (unsigned int i = 0; i < PLAYER_COUNT; i++) {
         SDL_FRect rect = vec_to_rect(&player[i].position, &player[i].size);
         SDL_RenderFillRect(renderer, &rect);
+
+        if (app_debug){
+            Color bcol = {0.0, 1.0, i, 1.0};
+            Color df = {1.0, 1.0, 1.0, 1.0};
+            app_set_draw_color(&bcol);
+            SDL_RenderLine(renderer, 0.0, (player[i].position.y + player[i].size.y/2), window_width, (player[i].position.y + player[i].size.y/2));
+            app_set_draw_color(&df);
+        }
     }
 }
 
@@ -82,6 +90,14 @@ static inline void draw_players(SDL_Renderer *renderer) {
 static inline void draw_ball(SDL_Renderer *renderer) {
     SDL_FRect rect = vec_to_rect(&ball.position, &ball.size);
     SDL_RenderFillRect(renderer, &rect);
+
+    if (app_debug){
+        Color bcol = {1.0, 0.0, 1.0, 1.0};
+        Color df = {1.0, 1.0, 1.0, 1.0};
+        app_set_draw_color(&bcol);
+        SDL_RenderLine(renderer, 0.0, (ball.position.y + ball.size.y/2), window_width, (ball.position.y + ball.size.y/2));
+        app_set_draw_color(&df);
+    }
 }
 
 /**
@@ -90,27 +106,28 @@ static inline void draw_ball(SDL_Renderer *renderer) {
  * @param renderer SDL renderer instance.
  */
 static inline void draw_center_line(SDL_Renderer *renderer) {
-    SDL_RenderLine(renderer, (float)WINDOW_WIDTH / 2, 0.0f,
-                   (float)WINDOW_WIDTH / 2, WINDOW_HEIGHT);
+    SDL_RenderLine(renderer, (float)window_width / 2, 0.0f,
+                   (float)window_width / 2, window_height);
 }
 
 inline void pong_render(){
     SDL_Renderer* renderer = app_get_renderer();
 
     // Set foreground color
-    SDL_SetRenderDrawColorFloat(renderer, 1.0, 1.0, 1.0, SDL_ALPHA_OPAQUE_FLOAT);
+    Color fg = (Color){1.0, 1.0, 1.0, 1.0};
+    app_set_draw_color(&fg);
     app_set_scale(TEXT_SCALE);
     // Render player points counter
-    app_draw_text((Vector2){WINDOW_WIDTH / 3, 32}, TEXT_SCALE, "%u", player[0].points);
-    app_draw_text((Vector2){WINDOW_WIDTH - WINDOW_WIDTH / 3, 32}, TEXT_SCALE, "%u", player[1].points);
+    app_draw_text((Vector2){window_width / 3, 32}, TEXT_SCALE, "%u", player[0].points);
+    app_draw_text((Vector2){window_width - window_width / 3, 32}, TEXT_SCALE, "%u", player[1].points);
 
     // Inform the players the game is paused
     if (pause){
-        //SDL_RenderDebugText(renderer, ((float)WINDOW_WIDTH/2 - 70) / TEXT_SCALE, ((float)WINDOW_HEIGHT/2 - 16) / TEXT_SCALE, "Game Paused");
-        app_draw_text((Vector2){((float)WINDOW_WIDTH/2 - 70), ((float)WINDOW_HEIGHT/2 - 16)}, TEXT_SCALE, "Game Paused");
+        //SDL_RenderDebugText(renderer, ((float)window_width/2 - 70) / TEXT_SCALE, ((float)window_height/2 - 16) / TEXT_SCALE, "Game Paused");
+        app_draw_text((Vector2){((float)window_width/2 - 70), ((float)window_height/2 - 16)}, TEXT_SCALE, "Game Paused");
     }
 
-    app_set_scale(1.0);
+    app_set_scale(default_scale);
 
     draw_players(renderer);
     draw_ball(renderer);
@@ -127,17 +144,14 @@ inline void score() {
     reset_players();
 }
 
-// FIXME: Add a little bit of randomness in the direction of the bounce to
-// prevent endless bouncing back and forth
-// FIXME: The randomness thing from the FIXME above is somewhat implemented, there is no "randomness"
-// since it's just the factor of the distance from the player's center to the ball's position, but
-// it makes it seem random
 // FIXME: I think the bounce factor is not center-aligned, so it just calculates from the top-left
-// of the ball, instead of center, but at least with the player is truly the center.
+// of the ball, instead of center, not an issue with the player
+// FIXME above might be fixed, it's hard to tell
 inline void bounce() {
     const unsigned int _player = ball.velocity.x < 0.0f ? PLAYER_ONE : PLAYER_TWO;
-    const float player_center_ypos = player[_player].position.y + player[_player].size.y / 2;
-    float bounce_height_factor = (player_center_ypos - ball.position.y) / player[_player].size.y;
+    const float player_center_height = player[_player].position.y + player[_player].size.y / 2;
+    const float ball_center_height = ball.position.y + ball.size.y / 2;
+    float bounce_height_factor = (player_center_height - ball_center_height) / player[_player].size.y;
     bounce_height_factor = bounce_height_factor * 2;
 
     ball.velocity = normalize(&ball.velocity);
@@ -190,7 +204,7 @@ static inline void process_ball(double delta_time) {
     if (ball.position.y <= 0.0f){
         ball.velocity.y = fabsf(ball.velocity.y);
     }
-    else if (ball.position.y + ball.size.y >= WINDOW_HEIGHT){
+    else if (ball.position.y + ball.size.y >= window_height){
         ball.velocity.y = -fabsf(ball.velocity.y);
     }
 
@@ -201,7 +215,7 @@ static inline void process_ball(double delta_time) {
         }
     }
     // If hit wall
-    if (ball.position.x + ball.size.x < 0.0f || ball.position.x > WINDOW_WIDTH) {
+    if (ball.position.x + ball.size.x < 0.0f || ball.position.x > window_width) {
        score();
     }
 }
@@ -229,8 +243,8 @@ static inline void process_players(double delta_time) {
     for (unsigned int i = 0; i < PLAYER_COUNT; i++) {
         if (player[i].position.y < 0.0f)
             player[i].position.y = 0;
-        else if (player[i].position.y + player[i].size.y > WINDOW_HEIGHT)
-            player[i].position.y = WINDOW_HEIGHT - player[i].size.y;
+        else if (player[i].position.y + player[i].size.y > window_height)
+            player[i].position.y = window_height - player[i].size.y;
     }
 }
 

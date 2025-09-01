@@ -4,14 +4,22 @@
 
 #include "app.h"
 #include "pong.h"
+#include "utils.h"
 #include <SDL3/SDL_render.h>
 #include <SDL3/SDL_timer.h>
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_log.h>
+#include <stdio.h>
 
 /* We will use this renderer to draw into this window every frame. */
 static SDL_Window *window = NULL;
 static SDL_Renderer *renderer = NULL;
+
+static int argc;
+static char **argv;
+
+unsigned int window_width = DEFAULT_WINDOW_WIDTH;
+unsigned int window_height = DEFAULT_WINDOW_HEIGHT;
 
 float default_scale = 1.0;
 
@@ -19,6 +27,7 @@ unsigned long previous_time = 0;
 unsigned long current_time = 0;
 bool pause = false;
 bool app_loop = true;
+bool app_debug = false;
 
 inline SDL_Window* app_get_window(){
     return window;
@@ -39,6 +48,26 @@ inline const bool* app_get_input_keys(){
     return SDL_GetKeyboardState(NULL);
 }
 
+// Avoid using this function
+inline bool app_parameter_exists(const char* param){
+    return app_get_parameter_index(param) != -1 ? true : false;
+}
+
+inline int app_get_parameter_index(const char* param){
+    for(size_t i = 0; i < argc; i++){
+        if (strcmp(argv[i], param) == 0){
+            return i;
+        }
+    }
+    return -1;
+}
+
+inline const char* app_get_parameter_value(size_t index){
+    if (index >= argc) return "___ERR";
+    if (argv[index+1][0] == '-') return "___NOVAL";
+    return (const char*)argv[index+1];
+}
+
 inline void app_clear_screen(){
     /* clear the window to the draw color. */
     SDL_RenderClear(renderer);
@@ -50,7 +79,7 @@ inline void app_set_scale(const float scale){
 
 inline float app_get_scale(){
     float scale;
-    // I ignore the 2 dimentional scale SDL offers, I only care about a single value
+    // I ignore the 2 dimensional scale SDL offers, I only care about a single value
     // I don't think I can pass null to the function, so the Y scale will end up being \
     // the most significant value.
     SDL_GetRenderScale(renderer, &scale, &scale);
@@ -58,8 +87,13 @@ inline float app_get_scale(){
 }
 
 inline void app_render_finish(){
+    app_set_scale(default_scale);
     /* put the newly-cleared rendering on the screen. */
     SDL_RenderPresent(renderer);
+}
+
+inline void app_set_draw_color(Color* col){
+    SDL_SetRenderDrawColorFloat(renderer, col->r, col->g, col->b, col->a);
 }
 
 inline bool app_draw_text(Vector2 position, float scale, const char* fmt, ...){
@@ -90,13 +124,51 @@ inline bool app_draw_text(Vector2 position, float scale, const char* fmt, ...){
     return retval;
 }
 
-inline int app_initialize() {
+static inline void app_handle_parameters(){
+    if (app_get_parameter_index("-d") != -1){
+        app_debug = true;
+        printf("APP:Debug enabled\n");
+    }
+ 
+    #ifdef NO
+    { // Allow custom scale - BROKEN!!!
+        int _app_scale_param = app_get_parameter_index("-s");
+        if (_app_scale_param != -1){
+            float _app_scale = SDL_atof(app_get_parameter_value(_app_scale_param));
+            default_scale = _app_scale < 1.0 ? default_scale : _app_scale;
+        }
+        app_debug ? printf("APP:%s=%d\n", var2str(default_scale), default_scale) : 0;
+    }
+    #endif
+
+    { // Get window dimensions
+        int _app_w_index = app_get_parameter_index("-w");
+        int _app_h_index = app_get_parameter_index("-h");
+        int _app_w = SDL_atoi(app_get_parameter_value(_app_w_index));
+        int _app_h = SDL_atoi(app_get_parameter_value(_app_h_index));
+        window_width = _app_w_index != -1 ? _app_w : window_width;
+        window_height = _app_h_index != -1 ? _app_h : window_height;
+        app_debug ? printf("APP:%s=%d\n", var2str(window_width), window_width) : 0;
+        app_debug ? printf("APP:%s=%d\n", var2str(window_height), window_height) : 0;
+    }
+}
+
+inline int app_initialize(int _argc, const char **_argv) {
+    // Store arguments
+    argc = _argc;
+    argv = (char**)_argv;
+
+    app_handle_parameters();
+
+    window_width *= default_scale;
+    window_height *= default_scale;
+
     // ###### Initialize SDL ######
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO)) {
         SDL_Log("Couldn't initialize SDL: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
-    if (!SDL_CreateWindowAndRenderer(WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT, 0,
+    if (!SDL_CreateWindowAndRenderer(WINDOW_TITLE, window_width, window_height, 0,
                 &window, &renderer)) {
         SDL_Log("Couldn't create window/renderer: %s", SDL_GetError());
         return SDL_APP_FAILURE;
@@ -117,8 +189,17 @@ inline void app_handle_events(){
             app_loop = false;
             break;
         case SDL_EVENT_KEY_DOWN:
-            if (event.key.scancode == SDL_SCANCODE_ESCAPE)
-                pause = !pause;
+            switch (event.key.scancode){
+                case SDL_SCANCODE_ESCAPE:
+                    pause = !pause;
+                    break;
+                case SDL_SCANCODE_R:
+                    pong_initialize();
+                    break;
+                case SDL_SCANCODE_Q:
+                    app_loop = false;
+                    break;
+            }
             break;
         }
     }
@@ -141,13 +222,11 @@ inline void app_process() {
 inline void app_render() {
     //SDL_Renderer* renderer = app_get_renderer();
     // Render the application
-    SDL_SetRenderDrawColorFloat(
-        renderer, 0.0, 0.0, 0.0,
-        SDL_ALPHA_OPAQUE_FLOAT); /* new color, full alpha. */
+    Color bg = (Color){0.0, 0.0, 0.0, 1.0};
+    app_set_draw_color(&bg);
 
     /* clear the window to the draw color. */
     app_clear_screen();
-    app_set_scale(default_scale);
 
     pong_render();
 

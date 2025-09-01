@@ -10,6 +10,7 @@
 #ifndef APP_H_
 #define APP_H_
 #include "math.h"
+#include "utils.h"
 #include <SDL3/SDL_render.h>
 
 /**
@@ -18,14 +19,14 @@
 #define WINDOW_TITLE "Pong Clone"
 
 /**
- * Width of the window.
+ * Default width of the window.
  */
-#define WINDOW_WIDTH 640
+#define DEFAULT_WINDOW_WIDTH 640
 
 /**
- * Height of the window.
+ * Default height of the window.
  */
-#define WINDOW_HEIGHT 480
+#define DEFAULT_WINDOW_HEIGHT 480
 
 /**
  * Scale of debug text displayed
@@ -34,6 +35,9 @@
 
 //extern SDL_Window *window;
 //extern SDL_Renderer *renderer;
+
+extern unsigned int window_width;
+extern unsigned int window_height;
 
 extern float default_scale;
 
@@ -60,6 +64,8 @@ extern bool pause;
  * If false, stop main loop (continue to app_finalize and exit app)
  */
 extern bool app_loop;
+
+extern bool app_debug;
 
 /**
  * @brief Get pointer to SDL Window
@@ -93,7 +99,7 @@ extern const bool* app_get_input_keys();
 /**
  * Initialize the application.
  */
-extern int app_initialize(void);
+extern int app_initialize(int _argc, const char **_argv);
 
 /**
  * Handle app events
@@ -105,6 +111,32 @@ extern void app_handle_events();
  * Process the application.
  */
 extern void app_process(void);
+
+/**
+ * @brief Iterates through all passed arguments to find if parameter (argument) exists
+ * 
+ * @param param Name (key) of the parameter (argument)
+ * @return true if exists
+ * @return false if it doesn't exist
+ * @deprecated Use @ref app_get_parameter_index() instead.
+ */
+extern bool app_parameter_exists(const char* param);
+
+/**
+ * @brief Iterates through all passed arguments to find if parameter (argument) exists.
+ * 
+ * @param param Name (key) of the parameter (argument)
+ * @return int Index of the parameter, -1 if not found.
+ */
+extern int app_get_parameter_index(const char* param);
+
+/**
+ * @brief Get the value of parameter
+ * 
+ * @param index Index of parameter.
+ * @return Value of parameter, returns ___ERR if failed, returns ___NOVAL if parameter value is not a valid value (like if value is an argument that starts with '-')
+ */
+extern const char* app_get_parameter_value(size_t index);
 
 /**
  * @brief  Clear the screen
@@ -126,6 +158,8 @@ extern float app_get_scale();
  * 
  */
 extern void app_render_finish();
+
+extern void app_set_draw_color(Color* col);
 
 /**
  * @brief Render text to the screen
