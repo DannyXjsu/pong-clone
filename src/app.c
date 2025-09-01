@@ -18,6 +18,7 @@ float default_scale = 1.0;
 unsigned long previous_time = 0;
 unsigned long current_time = 0;
 bool pause = false;
+bool app_loop = true;
 
 inline SDL_Window* app_get_window(){
     return window;
@@ -38,47 +39,6 @@ inline const bool* app_get_input_keys(){
     return SDL_GetKeyboardState(NULL);
 }
 
-inline int app_initialize() {
-    // ###### Initialize SDL ######
-    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO)) {
-        SDL_Log("Couldn't initialize SDL: %s", SDL_GetError());
-        return SDL_APP_FAILURE;
-    }
-    if (!SDL_CreateWindowAndRenderer(WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT, 0,
-                &window, &renderer)) {
-        SDL_Log("Couldn't create window/renderer: %s", SDL_GetError());
-        return SDL_APP_FAILURE;
-    }
-    // Initialize pong stuff
-    pong_initialize();
-
-    current_time = SDL_GetPerformanceCounter();
-
-    return SDL_APP_CONTINUE;
-}
-
-inline void app_handle_inputs(void *appstate, SDL_Event *event){
-    switch(event->type){
-        case SDL_EVENT_KEY_DOWN:
-            if (event->key.scancode == SDL_SCANCODE_ESCAPE)
-                pause = !pause;
-   }
-}
-
-inline void app_process() {
-    // Getting delta time
-    previous_time = current_time;
-    current_time = SDL_GetPerformanceCounter();
-    const float dt = app_get_delta_time();
-
-    // Handle pausing
-    if (pause){
-        return;
-    }
-
-    pong_process();
-}
-
 inline void app_clear_screen(){
     /* clear the window to the draw color. */
     SDL_RenderClear(renderer);
@@ -88,23 +48,20 @@ inline void app_set_scale(const float scale){
     SDL_SetRenderScale(renderer, scale, scale);
 }
 
+inline float app_get_scale(){
+    float scale;
+    // I ignore the 2 dimentional scale SDL offers, I only care about a single value
+    // I don't think I can pass null to the function, so the Y scale will end up being \
+    // the most significant value.
+    SDL_GetRenderScale(renderer, &scale, &scale);
+    return scale;
+}
+
 inline void app_render_finish(){
     /* put the newly-cleared rendering on the screen. */
     SDL_RenderPresent(renderer);
 }
 
-/**
- * @brief Render text to the screen
- * 
- * Works very similar to SDL @ref SDL_RenderDebugTextFormat
- * 
- * @param position Position in the screen
- * @param scale Scale of the text
- * @param fmt Text (format)
- * @param ... Formatting arguments
- * 
- * @return true on success or false on failure; call SDL_GetError() for more information.
- */
 inline bool app_draw_text(Vector2 position, float scale, const char* fmt, ...){
     va_list ap;
     va_start(ap, fmt);
@@ -131,6 +88,54 @@ inline bool app_draw_text(Vector2 position, float scale, const char* fmt, ...){
     SDL_free(str);
     app_set_scale(default_scale);
     return retval;
+}
+
+inline int app_initialize() {
+    // ###### Initialize SDL ######
+    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO)) {
+        SDL_Log("Couldn't initialize SDL: %s", SDL_GetError());
+        return SDL_APP_FAILURE;
+    }
+    if (!SDL_CreateWindowAndRenderer(WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT, 0,
+                &window, &renderer)) {
+        SDL_Log("Couldn't create window/renderer: %s", SDL_GetError());
+        return SDL_APP_FAILURE;
+    }
+    // Initialize pong stuff
+    pong_initialize();
+
+    current_time = SDL_GetPerformanceCounter();
+
+    return SDL_APP_CONTINUE;
+}
+
+inline void app_handle_events(){
+    SDL_Event event;
+    while (SDL_PollEvent(&event)) {
+        switch(event.type){
+        case SDL_EVENT_QUIT:
+            app_loop = false;
+            break;
+        case SDL_EVENT_KEY_DOWN:
+            if (event.key.scancode == SDL_SCANCODE_ESCAPE)
+                pause = !pause;
+            break;
+        }
+    }
+}
+
+inline void app_process() {
+    // Getting delta time
+    previous_time = current_time;
+    current_time = SDL_GetPerformanceCounter();
+    const float dt = app_get_delta_time();
+
+    // Handle pausing
+    if (pause){
+        return;
+    }
+
+    pong_process();
 }
 
 inline void app_render() {

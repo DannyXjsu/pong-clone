@@ -50,9 +50,16 @@ extern unsigned long current_time;
 /**
  * Processing status
  *
- * If true, completely stops processing of app (excluding delta time calculation).
+ * If true, pause processing of app (excluding delta time calculation).
  */
 extern bool pause;
+
+/**
+ * Controls main loop
+ *
+ * If false, stop main loop (continue to app_finalize and exit app)
+ */
+extern bool app_loop;
 
 /**
  * @brief Get pointer to SDL Window
@@ -89,12 +96,10 @@ extern const bool* app_get_input_keys();
 extern int app_initialize(void);
 
 /**
- * Handle app inputs
+ * Handle app events
  *
- * @param appstate SDL3 App state.
- * @param event SDL3 Event struct.
  */
-extern void app_handle_inputs(void *appstate, SDL_Event *event);
+extern void app_handle_events();
 
 /**
  * Process the application.
@@ -106,18 +111,34 @@ extern void app_process(void);
  * 
  */
 extern void app_clear_screen();
+
 /**
  * @brief Set render scale
  * 
  * @param scale Scale factor
  */
 extern void app_set_scale(const float scale);
+
+extern float app_get_scale();
+
 /**
  * @brief Finish rendering and present to the screen
  * 
  */
 extern void app_render_finish();
 
+/**
+ * @brief Render text to the screen
+ * 
+ * Works very similar to SDL @ref SDL_RenderDebugTextFormat
+ * 
+ * @param position Position in the screen
+ * @param scale Scale of the text
+ * @param fmt Text (format)
+ * @param ... Formatting arguments
+ * 
+ * @return true on success or false on failure; call SDL_GetError() for more information.
+ */
 extern bool app_draw_text(Vector2 position, float scale, const char* fmt, ...);
 
 /**
