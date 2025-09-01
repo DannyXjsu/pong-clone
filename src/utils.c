@@ -1,3 +1,7 @@
+/**
+ * @file utils.c
+ */
+
 #include "utils.h"
 
 inline Color8 color_to_color8(Color* col){

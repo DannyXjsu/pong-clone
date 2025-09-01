@@ -3,8 +3,8 @@
  * @brief Application definitions.
  *
  * @author DannyXjsu
- * @version 1.1
- * @date 2025-07-15
+ * @version 1.2
+ * @date 2025-09-01
  */
 
 #ifndef APP_H_
@@ -97,9 +97,19 @@ extern const double app_get_delta_time();
 extern const bool* app_get_input_keys();
 
 /**
+ * @brief Handles passed arguments (parameters) to the program
+ * 
+ * Also stores them for easy access using @ref app_get_parameter_index and @ref app_get_parameter_value
+ * 
+ * @param _argc 
+ * @param _argv 
+ */
+extern void app_handle_parameters(int _argc, const char **_argv);
+
+/**
  * Initialize the application.
  */
-extern int app_initialize(int _argc, const char **_argv);
+extern int app_initialize();
 
 /**
  * Handle app events
@@ -127,20 +137,30 @@ extern bool app_parameter_exists(const char* param);
  * 
  * @param param Name (key) of the parameter (argument)
  * @return int Index of the parameter, -1 if not found.
+ * @see @ref app_get_parameter_value
  */
 extern int app_get_parameter_index(const char* param);
 
 /**
- * @brief Get the value of parameter
+ * @brief Get the value of parameter using an index
  * 
  * @param index Index of parameter.
  * @return Value of parameter, returns ___ERR if failed, returns ___NOVAL if parameter value is not a valid value (like if value is an argument that starts with '-')
+ * @see @ref app_get_parameter_index
  */
 extern const char* app_get_parameter_value(size_t index);
 
 /**
- * @brief  Clear the screen
+ * @brief Get the value of parameter using a key (name of parameter)
  * 
+ * @param param Name (key) of parameter (argument)
+ * @return Value of parameter, returns ___ERR if failed, returns ___NOVAL if parameter value is not a valid value (like if value is an argument that starts with '-')
+ * @see @ref app_get_parameter_value and @ref app_get_parameter_index
+ */
+extern const char* app_get_parameter_value_by_name(const char* param);
+
+/**
+ * @brief  Clear the screen
  */
 extern void app_clear_screen();
 
@@ -151,6 +171,11 @@ extern void app_clear_screen();
  */
 extern void app_set_scale(const float scale);
 
+/**
+ * @brief Get current one dimensional scale
+ * 
+ * @return float Current scale
+ */
 extern float app_get_scale();
 
 /**
@@ -159,6 +184,11 @@ extern float app_get_scale();
  */
 extern void app_render_finish();
 
+/**
+ * @brief Sets drawing color
+ * 
+ * @param col Drawing color
+ */
 extern void app_set_draw_color(Color* col);
 
 /**

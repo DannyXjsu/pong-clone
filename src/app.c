@@ -10,6 +10,7 @@
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_log.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 /* We will use this renderer to draw into this window every frame. */
 static SDL_Window *window = NULL;
@@ -40,7 +41,7 @@ inline SDL_Renderer* app_get_renderer(){
 inline const double app_get_delta_time(){
     // Usually the ticks or "counter" is multiplied by 1000 to convert ms to seconds, but that gives me weird results,
     // multiplying by 60 seems more stable and how it felt like using VSync
-    return (const double)((current_time - previous_time)*60 / (double)SDL_GetPerformanceFrequency());
+    return (const double)((current_time - previous_time) * 60 / (double)SDL_GetPerformanceFrequency());
 }
 
 inline const bool* app_get_input_keys(){
@@ -64,6 +65,14 @@ inline int app_get_parameter_index(const char* param){
 
 inline const char* app_get_parameter_value(size_t index){
     if (index >= argc) return "___ERR";
+    if (argv[index+1][0] == '-') return "___NOVAL";
+    return (const char*)argv[index+1];
+}
+
+inline const char* app_get_parameter_value_by_name(const char* param)
+{
+    size_t index = app_get_parameter_index(param);
+    if (index >= argc || index == -1) return "___ERR";
     if (argv[index+1][0] == '-') return "___NOVAL";
     return (const char*)argv[index+1];
 }
@@ -100,14 +109,14 @@ inline bool app_draw_text(Vector2 position, float scale, const char* fmt, ...){
     va_list ap;
     va_start(ap, fmt);
 
-    app_set_scale(TEXT_SCALE);
+    app_set_scale(scale);
 
     // fast path to avoid unnecessary allocation and copy. If you're going through the dynapi, there's a good chance
     // you _always_ hit this path, since it probably had to process varargs before calling into the jumptable.
     if (SDL_strcmp(fmt, "%s") == 0) {
         const char *str = va_arg(ap, const char *);
         va_end(ap);
-        return SDL_RenderDebugText(renderer, position.x / TEXT_SCALE, position.y / TEXT_SCALE, str);
+        return SDL_RenderDebugText(renderer, position.x / scale, position.y / scale, str);
     }
 
     char *str = NULL;
@@ -118,13 +127,17 @@ inline bool app_draw_text(Vector2 position, float scale, const char* fmt, ...){
         return false;
     }
 
-    const bool retval = SDL_RenderDebugText(renderer, position.x / TEXT_SCALE, position.y / TEXT_SCALE, str);
+    const bool retval = SDL_RenderDebugText(renderer, position.x / scale, position.y / scale, str);
     SDL_free(str);
     app_set_scale(default_scale);
     return retval;
 }
 
-static inline void app_handle_parameters(){
+inline void app_handle_parameters(int _argc, const char **_argv){
+    // Store arguments
+    argc = _argc;
+    argv = (char**)_argv;
+
     if (app_get_parameter_index("-d") != -1){
         app_debug = true;
         printf("APP:Debug enabled\n");
@@ -151,15 +164,40 @@ static inline void app_handle_parameters(){
         app_debug ? printf("APP:%s=%d\n", var2str(window_width), window_width) : 0;
         app_debug ? printf("APP:%s=%d\n", var2str(window_height), window_height) : 0;
     }
+
+    { // Set colors
+        Color8 _fg = color_to_color8(&foreground);
+        Color8 _bg = color_to_color8(&background);
+
+        if(app_parameter_exists("-fr")){
+            _fg.r = (uint8_t)atoi(app_get_parameter_value_by_name("-fr"));
+            foreground.r = (float)_fg.r/255;
+        }
+        if(app_parameter_exists("-fg")){
+            _fg.g = (uint8_t)atoi(app_get_parameter_value_by_name("-fg"));
+            foreground.g = (float)_fg.g/255;
+        }
+        if(app_parameter_exists("-fb")){
+            _fg.b = (uint8_t)atoi(app_get_parameter_value_by_name("-fb"));
+            foreground.b = (float)_fg.b/255;
+        }
+
+        if(app_parameter_exists("-br")){
+            _bg.r = (uint8_t)atoi(app_get_parameter_value_by_name("-br"));
+            background.r = (float)_bg.r/255;
+        }
+        if(app_parameter_exists("-bg")){
+            _bg.g = (uint8_t)atoi(app_get_parameter_value_by_name("-bg"));
+            background.g = (float)_bg.g/255;
+        }
+        if(app_parameter_exists("-bb")){
+            _bg.b = (uint8_t)atoi(app_get_parameter_value_by_name("-bb"));
+            background.b = (float)_bg.b/255;
+        }
+    }
 }
 
-inline int app_initialize(int _argc, const char **_argv) {
-    // Store arguments
-    argc = _argc;
-    argv = (char**)_argv;
-
-    app_handle_parameters();
-
+inline int app_initialize() {
     window_width *= default_scale;
     window_height *= default_scale;
 
@@ -173,6 +211,11 @@ inline int app_initialize(int _argc, const char **_argv) {
         SDL_Log("Couldn't create window/renderer: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
+
+    #ifdef VSYNC
+    SDL_SetRenderVSync(renderer,SDL_RENDERER_VSYNC_ADAPTIVE);
+    #endif
+
     // Initialize pong stuff
     pong_initialize();
 
@@ -190,6 +233,8 @@ inline void app_handle_events(){
             break;
         case SDL_EVENT_KEY_DOWN:
             switch (event.key.scancode){
+                case SDL_SCANCODE_P:
+                case SDL_SCANCODE_PAUSE:
                 case SDL_SCANCODE_ESCAPE:
                     pause = !pause;
                     break;
@@ -198,6 +243,9 @@ inline void app_handle_events(){
                     break;
                 case SDL_SCANCODE_Q:
                     app_loop = false;
+                    break;
+                case SDL_SCANCODE_D:
+                    app_debug = !app_debug;
                     break;
             }
             break;
@@ -222,8 +270,7 @@ inline void app_process() {
 inline void app_render() {
     //SDL_Renderer* renderer = app_get_renderer();
     // Render the application
-    Color bg = (Color){0.0, 0.0, 0.0, 1.0};
-    app_set_draw_color(&bg);
+    app_set_draw_color(&background);
 
     /* clear the window to the draw color. */
     app_clear_screen();

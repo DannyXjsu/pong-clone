@@ -1,3 +1,12 @@
+/**
+ * @file utils.h
+ * @brief General utilities.
+ *
+ * @author DannyXjsu
+ * @version 1.0
+ * @date 2025-09-01
+ */
+
 #ifndef UTILS_H_
 #define UTILS_H_
 

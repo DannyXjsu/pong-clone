@@ -4,7 +4,8 @@
 
 int main (int argc, const char **argv)
 {   
-    app_initialize(argc, argv);
+    app_initialize();
+    app_handle_parameters(argc, argv);
 
     while(app_loop)
     {
