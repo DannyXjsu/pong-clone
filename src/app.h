@@ -11,7 +11,8 @@
 #define APP_H_
 #include "math.h"
 #include "utils.h"
-#include <SDL3/SDL_render.h>
+
+#include <SDL3/SDL_render.h> // Not used in this file, but other files use it
 
 /**
  * Title of the window.
@@ -19,19 +20,15 @@
 #define WINDOW_TITLE "Pong Clone"
 
 /**
- * Default width of the window.
- */
-#define DEFAULT_WINDOW_WIDTH 640
-
-/**
- * Default height of the window.
- */
-#define DEFAULT_WINDOW_HEIGHT 480
-
-/**
  * Scale of debug text displayed
  */
 #define TEXT_SCALE 2.0
+
+typedef struct Sound {
+    Uint8 *wav_data;
+    Uint32 wav_data_len;
+    SDL_AudioStream *stream;
+} Sound;
 
 //extern SDL_Window *window;
 //extern SDL_Renderer *renderer;
@@ -39,17 +36,7 @@
 extern unsigned int window_width;
 extern unsigned int window_height;
 
-extern float default_scale;
-
-/**
- * The previous time of the process.
- */
-extern unsigned long previous_time;
-
-/**
- * Current process time to calculate delta time.
- */
-extern unsigned long current_time;
+//extern float default_scale;
 
 /**
  * Processing status
@@ -95,6 +82,27 @@ extern const double app_get_delta_time();
  * @return false if not pressed
  */
 extern const bool* app_get_input_keys();
+
+/**
+ * @brief Loads a WAV file into memory
+ * 
+ * @param file_name The name of the file to be loaded (relative path can be used)
+ * @return Pointer to the allocated sound
+ * 
+ * @see app_play_sound
+ */
+extern Sound* app_load_sound(const char *file_name);
+
+/**
+ * @brief Play an audio file loaded into memory
+ * 
+ * @param sound Pointer to the audio file in memory
+ * @return true if successful
+ * @return false if not
+ */
+extern bool app_play_sound(const Sound* sound);
+
+//extern bool app_load_wav(const char* wav_path);
 
 /**
  * @brief Handles passed arguments (parameters) to the program
@@ -192,6 +200,26 @@ extern void app_render_finish();
 extern void app_set_draw_color(Color* col);
 
 /**
+ * @brief Render a line to the screen
+ * 
+ * @param pos1 Starting position of the line
+ * @param pos2 Ending position of the line
+ * 
+ * @return true on success or false on failure; call SDL_GetError() for more information.
+ */
+extern bool app_draw_line(Vector2 *pos1, Vector2 *pos2);
+
+/**
+ * @brief Render a rectangle to the screen
+ * 
+ * @param position Position for the rect
+ * @param size Size of the rect
+ * 
+ * @return true on success or false on failure; call SDL_GetError() for more information.
+ */
+extern bool app_draw_rect(Vector2 *position, Vector2 *size);
+
+/**
  * @brief Render text to the screen
  * 
  * Works very similar to SDL @ref SDL_RenderDebugTextFormat
@@ -203,7 +231,7 @@ extern void app_set_draw_color(Color* col);
  * 
  * @return true on success or false on failure; call SDL_GetError() for more information.
  */
-extern bool app_draw_text(Vector2 position, float scale, const char* fmt, ...);
+extern bool app_draw_text(Vector2 *position, float scale, const char* fmt, ...);
 
 /**
  * Render the application.

@@ -5,27 +5,55 @@
 #include "app.h"
 #include "pong.h"
 #include "utils.h"
+
+#include <SDL3/SDL_init.h>
 #include <SDL3/SDL_render.h>
 #include <SDL3/SDL_timer.h>
-#include <SDL3/SDL_init.h>
 #include <SDL3/SDL_log.h>
+#include <SDL3/SDL_filesystem.h>
+#include <SDL3/SDL_audio.h>
+
 #include <stdio.h>
 #include <stdlib.h>
+
+/**
+ * Default width of the window.
+ */
+#define DEFAULT_WINDOW_WIDTH 640
+
+/**
+ * Default height of the window.
+ */
+#define DEFAULT_WINDOW_HEIGHT 480
 
 /* We will use this renderer to draw into this window every frame. */
 static SDL_Window *window = NULL;
 static SDL_Renderer *renderer = NULL;
 
+static float default_scale = 1.0;
+
+/**
+ * The previous time of the process.
+ */
+static unsigned long previous_time = 0;
+/**
+ * Current process time to calculate delta time.
+ */
+static unsigned long current_time = 0;
+
+// Audio
+static SDL_AudioDeviceID audio_device = 0;
+/* things that are playing sound (the audiostream itself, plus the original data, so we can refill to loop. */
+static Sound *sounds = NULL;
+
 static int argc;
 static char **argv;
+
+static bool enable_vsync = false;
 
 unsigned int window_width = DEFAULT_WINDOW_WIDTH;
 unsigned int window_height = DEFAULT_WINDOW_HEIGHT;
 
-float default_scale = 1.0;
-
-unsigned long previous_time = 0;
-unsigned long current_time = 0;
 bool pause = false;
 bool app_loop = true;
 bool app_debug = false;
@@ -64,7 +92,7 @@ inline int app_get_parameter_index(const char* param){
 }
 
 inline const char* app_get_parameter_value(size_t index){
-    if (index >= argc) return "___ERR";
+    if (index >= argc-1) return "___ERR";
     if (argv[index+1][0] == '-') return "___NOVAL";
     return (const char*)argv[index+1];
 }
@@ -105,7 +133,16 @@ inline void app_set_draw_color(Color* col){
     SDL_SetRenderDrawColorFloat(renderer, col->r, col->g, col->b, col->a);
 }
 
-inline bool app_draw_text(Vector2 position, float scale, const char* fmt, ...){
+inline bool app_draw_line(Vector2 *pos1, Vector2 *pos2){
+    return SDL_RenderLine(renderer, pos1->x, pos1->y, pos2->x, pos2->y);
+}
+
+inline bool app_draw_rect(Vector2 *position, Vector2 *size){
+    SDL_FRect rect = vec_to_rect(position, size);
+    return SDL_RenderFillRect(renderer, &rect);
+}
+
+inline bool app_draw_text(Vector2 *position, float scale, const char* fmt, ...){
     va_list ap;
     va_start(ap, fmt);
 
@@ -116,7 +153,7 @@ inline bool app_draw_text(Vector2 position, float scale, const char* fmt, ...){
     if (SDL_strcmp(fmt, "%s") == 0) {
         const char *str = va_arg(ap, const char *);
         va_end(ap);
-        return SDL_RenderDebugText(renderer, position.x / scale, position.y / scale, str);
+        return SDL_RenderDebugText(renderer, position->x / scale, position->y / scale, str);
     }
 
     char *str = NULL;
@@ -127,7 +164,7 @@ inline bool app_draw_text(Vector2 position, float scale, const char* fmt, ...){
         return false;
     }
 
-    const bool retval = SDL_RenderDebugText(renderer, position.x / scale, position.y / scale, str);
+    const bool retval = SDL_RenderDebugText(renderer, position->x / scale, position->y / scale, str);
     SDL_free(str);
     app_set_scale(default_scale);
     return retval;
@@ -154,13 +191,25 @@ inline void app_handle_parameters(int _argc, const char **_argv){
     }
     #endif
 
+    { // Vsync
+        if(app_get_parameter_index("-v") != 1){
+            enable_vsync = true;
+            app_debug ? printf("APP:VSync Enabled\n") : 0;
+        }
+    }
+
     { // Get window dimensions
         int _app_w_index = app_get_parameter_index("-w");
         int _app_h_index = app_get_parameter_index("-h");
         int _app_w = SDL_atoi(app_get_parameter_value(_app_w_index));
         int _app_h = SDL_atoi(app_get_parameter_value(_app_h_index));
+        // If parameters exist, set dimensions, otherwise, ignore
         window_width = _app_w_index != -1 ? _app_w : window_width;
         window_height = _app_h_index != -1 ? _app_h : window_height;
+        // If valid dimentions, set so, otherwise, ignore
+        window_width = window_width < DEFAULT_WINDOW_WIDTH/3 ? DEFAULT_WINDOW_WIDTH/3 : window_width;
+        window_height = window_height < DEFAULT_WINDOW_HEIGHT/3 ? DEFAULT_WINDOW_HEIGHT/3 : window_height;
+
         app_debug ? printf("APP:%s=%d\n", var2str(window_width), window_width) : 0;
         app_debug ? printf("APP:%s=%d\n", var2str(window_height), window_height) : 0;
     }
@@ -197,6 +246,47 @@ inline void app_handle_parameters(int _argc, const char **_argv){
     }
 }
 
+inline Sound* app_load_sound(const char *file_name){
+    sounds = (Sound*)malloc(sizeof(sounds) + sizeof(Sound*));
+    if (sounds == NULL){
+        printf("Failed to allocate memory for audio file: %s - size: %d+%d\n", file_name, sizeof(sounds), sizeof(Sound*));
+    }
+
+    int i;
+    for (i=0; i < SDL_arraysize(sounds); i++);
+    SDL_AudioSpec spec;
+    char *wav_path = NULL;
+
+    /* Load the .wav files from wherever the app is being run from. */
+    SDL_asprintf(&wav_path, "%s%s", SDL_GetBasePath(), file_name);  /* allocate a string of the full file path */
+    if (!SDL_LoadWAV(wav_path, &spec, &sounds[i].wav_data, &sounds[i].wav_data_len)) {
+        SDL_Log("Couldn't load .wav file: %s", SDL_GetError());
+    } else
+        printf("Loaded WAV: %s\n", wav_path);
+
+    /* Create an audio stream. Set the source format to the wav's format (what
+       we'll input), leave the dest format NULL here (it'll change to what the
+       device wants once we bind it). */
+    sounds[i].stream = SDL_CreateAudioStream(&spec, NULL);
+    if (!sounds[i].stream) {
+        SDL_Log("Couldn't create audio stream: %s", SDL_GetError());
+    } else if (!SDL_BindAudioStream(audio_device, sounds[i].stream)) {  /* once bound, it'll start playing when there is data available! */
+        SDL_Log("Failed to bind '%s' stream to device: %s", file_name, SDL_GetError());
+    }
+    
+    SDL_free(wav_path);  /* done with this string. */
+    return &sounds[i];
+}
+
+inline bool app_play_sound(const Sound* sound){
+    if (sound != NULL){
+        SDL_PutAudioStreamData(sound->stream, sound->wav_data, (int) sound->wav_data_len);
+        return true;
+    }
+    printf("Unable to play sound\n");
+    return false;
+}
+
 inline int app_initialize() {
     window_width *= default_scale;
     window_height *= default_scale;
@@ -212,9 +302,18 @@ inline int app_initialize() {
         return SDL_APP_FAILURE;
     }
 
-    #ifdef VSYNC
-    SDL_SetRenderVSync(renderer,SDL_RENDERER_VSYNC_ADAPTIVE);
-    #endif
+    if (enable_vsync){
+        SDL_SetRenderVSync(renderer,SDL_RENDERER_VSYNC_ADAPTIVE);
+    }
+
+    /* open the default audio device in whatever format it prefers; our audio streams will adjust to it. */
+    audio_device = SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, NULL);
+    if (audio_device == 0) {
+        SDL_Log("Couldn't open audio device: %s", SDL_GetError());
+        //return SDL_APP_FAILURE;
+    }
+
+    printf("SDL Initialized\n");
 
     // Initialize pong stuff
     pong_initialize();
@@ -281,5 +380,14 @@ inline void app_render() {
 }
 
 inline void app_finalize() {
-    // Finalize the application
+    SDL_CloseAudioDevice(audio_device);
+
+    for (int i = 0; i < SDL_arraysize(sounds); i++) {
+        if (sounds[i].stream) {
+            SDL_DestroyAudioStream(sounds[i].stream);
+        }
+        SDL_free(sounds[i].wav_data);
+    }
+
+    free(sounds);
 }

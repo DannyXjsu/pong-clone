@@ -10,9 +10,6 @@
 #ifndef PONG_H_
 #define PONG_H_
 
-#include <SDL3/SDL_rect.h>
-#include <SDL3/SDL_render.h>
-
 #include "utils.h"
 #include "math.h"
 

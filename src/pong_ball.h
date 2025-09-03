@@ -21,7 +21,7 @@
 /**
  * Speed gain on ball bounce.
  */
-#define BALL_SPEED_GAIN_ON_BOUNCE 0.5
+#define BALL_SPEED_GAIN_ON_BOUNCE 0.20
 
 /**
  * Size in pixels of the ball.
@@ -41,21 +41,21 @@
 /**
  * Ball class.
  */
-typedef struct {
+typedef struct Ball{
     /** Speed of the ball. */
     float speed;
     /** Velocity of the ball. */
-    Vector2 velocity;
+    Vector2 *velocity;
     /** Position of the ball. */
-    Vector2 position;
+    Vector2 *position;
     /** Size of the ball. */
-    Vector2 size;
+    Vector2 *size;
 } Ball;
 
 /**
  * Ball instance.
  */
-extern Ball ball;
+extern Ball* pBall;
 
 /**
  * Check if the ball is touching a player.

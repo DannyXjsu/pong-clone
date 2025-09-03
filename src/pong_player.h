@@ -46,15 +46,15 @@ typedef struct {
     /** Points/score of the player. */
     unsigned int points;
     /** Position of the player. */
-    Vector2 position;
+    Vector2 *position;
     /** Size of the player. */
-    Vector2 size;
+    Vector2 *size;
 } Player;
 
 /**
  * Players array.
  */
-extern Player player[PLAYER_COUNT];
+extern Player* pPlayer[PLAYER_COUNT];
 
 /**
  * Shared (between players) speed value.

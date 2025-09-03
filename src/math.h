@@ -46,9 +46,8 @@ extern float length(Vector2 *vector);
  * @brief Normalizes the vector.
  *
  * @param vector The vector to normalize.
- * @return The normalized vector.
  */
-extern Vector2 normalize(Vector2 *vector);
+extern void normalize(Vector2 *vector);
 
 /**
  * @brief Calculates the dot product of two vectors.

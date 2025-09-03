@@ -9,11 +9,10 @@ inline float length(Vector2 *vector) {
     return sqrtf(vector->x * vector->x + vector->y * vector->y);
 }
 
-inline Vector2 normalize(Vector2 *vector) {
+inline void normalize(Vector2 *vector) {
     const float _length = length(vector);
-    if (_length == 0.0f)
-        return (Vector2){0, 0};
-    return (Vector2){vector->x / _length, vector->y / _length};
+    vector->x = _length == 0.0f ? 0.0 : vector->x / _length;
+    vector->y = _length == 0.0f ? 0.0 : vector->y / _length;
 }
 
 inline float dot(Vector2 *vector1, Vector2 *vector2){
