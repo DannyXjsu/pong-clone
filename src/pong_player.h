@@ -42,13 +42,15 @@
 /**
  * Player class.
  */
-typedef struct {
+typedef struct Player{
     /** Points/score of the player. */
     unsigned int points;
     /** Position of the player. */
-    Vector2 *position;
+    Vector2 position;
     /** Size of the player. */
-    Vector2 *size;
+    Vector2 size;
+
+    void (*reset)(void);
 } Player;
 
 /**
@@ -64,13 +66,7 @@ extern float speed_shared;
 /**
  * Initialize players.
  */
-extern void initialize_players();
-
-/**
- * Reset players to their initial positions.
- */
-extern void reset_players(void);
-
+extern void initialize_players(void);
 
 /**
  * Process players.
@@ -82,6 +78,6 @@ extern void process_players(double delta_time);
 /**
  * Render players.
  */
-extern void draw_players(); 
+extern void draw_players(void); 
 
 #endif

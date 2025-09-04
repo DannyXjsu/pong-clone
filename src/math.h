@@ -15,7 +15,7 @@
  *
  * Represents a 2D vector with x and y components, can be accessed as an array.
  */
-typedef struct {
+typedef struct Vector2{
     union {
         struct {
             /** The x component of the vector. */

@@ -45,33 +45,21 @@ typedef struct Ball{
     /** Speed of the ball. */
     float speed;
     /** Velocity of the ball. */
-    Vector2 *velocity;
+    Vector2 velocity;
     /** Position of the ball. */
-    Vector2 *position;
+    Vector2 position;
     /** Size of the ball. */
-    Vector2 *size;
+    Vector2 size;
+
+    void (*reset)();
+    bool (*is_touching_player)(unsigned int);
+    bool (*is_heading_towards)(unsigned int);
 } Ball;
 
 /**
  * Ball instance.
  */
 extern Ball* pBall;
-
-/**
- * Check if the ball is touching a player.
- *
- * @param _player Player index.
- * @return True if the ball is touching the player, false otherwise.
- */
-extern bool is_ball_touching_player(unsigned int _player);
-
-/**
- * Check if the ball is touching a player.
- *
- * @param _player Player index.
- * @return True if the ball is heading towards the player, false otherwise.
- */
-extern bool is_ball_heading_towards(unsigned int _player);
 
 /**
  * Event for when the ball bounces.
@@ -82,11 +70,6 @@ extern void bounce(void);
  * Initialize ball.
  */
 extern void initialize_ball();
-
-/**
- * Reset the ball to the center of the screen.
- */
-extern void reset_ball(void);
 
 /**
  * Process the ball.

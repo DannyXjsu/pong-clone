@@ -180,7 +180,7 @@ inline void app_handle_parameters(int _argc, const char **_argv){
         printf("APP:Debug enabled\n");
     }
  
-    #ifdef NO
+    #ifdef SCALING
     { // Allow custom scale - BROKEN!!!
         int _app_scale_param = app_get_parameter_index("-s");
         if (_app_scale_param != -1){
@@ -201,8 +201,8 @@ inline void app_handle_parameters(int _argc, const char **_argv){
     { // Get window dimensions
         int _app_w_index = app_get_parameter_index("-w");
         int _app_h_index = app_get_parameter_index("-h");
-        int _app_w = SDL_atoi(app_get_parameter_value(_app_w_index));
-        int _app_h = SDL_atoi(app_get_parameter_value(_app_h_index));
+        int _app_w = atoi(app_get_parameter_value(_app_w_index));
+        int _app_h = atoi(app_get_parameter_value(_app_h_index));
         // If parameters exist, set dimensions, otherwise, ignore
         window_width = _app_w_index != -1 ? _app_w : window_width;
         window_height = _app_h_index != -1 ? _app_h : window_height;
@@ -249,11 +249,12 @@ inline void app_handle_parameters(int _argc, const char **_argv){
 inline Sound* app_load_sound(const char *file_name){
     sounds = (Sound*)malloc(sizeof(sounds) + sizeof(Sound*));
     if (sounds == NULL){
-        printf("Failed to allocate memory for audio file: %s - size: %d+%d\n", file_name, sizeof(sounds), sizeof(Sound*));
+        printf("Failed to allocate memory for audio file: %s - size: %lu+%lu\n", file_name, sizeof(sounds), sizeof(Sound*));
+        return NULL;
     }
 
     int i;
-    for (i=0; i < SDL_arraysize(sounds); i++);
+    for (i=0; i < arraysize(sounds); i++);
     SDL_AudioSpec spec;
     char *wav_path = NULL;
 
@@ -261,6 +262,8 @@ inline Sound* app_load_sound(const char *file_name){
     SDL_asprintf(&wav_path, "%s%s", SDL_GetBasePath(), file_name);  /* allocate a string of the full file path */
     if (!SDL_LoadWAV(wav_path, &spec, &sounds[i].wav_data, &sounds[i].wav_data_len)) {
         SDL_Log("Couldn't load .wav file: %s", SDL_GetError());
+        SDL_free(wav_path);  /* done with this string. */
+        return NULL;
     } else
         printf("Loaded WAV: %s\n", wav_path);
 
@@ -288,8 +291,10 @@ inline bool app_play_sound(const Sound* sound){
 }
 
 inline int app_initialize() {
+    #ifdef SCALING
     window_width *= default_scale;
     window_height *= default_scale;
+    #endif
 
     // ###### Initialize SDL ######
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO)) {
@@ -338,7 +343,7 @@ inline void app_handle_events(){
                     pause = !pause;
                     break;
                 case SDL_SCANCODE_R:
-                    pong_initialize();
+                    pong_reset();
                     break;
                 case SDL_SCANCODE_Q:
                     app_loop = false;
@@ -346,6 +351,9 @@ inline void app_handle_events(){
                 case SDL_SCANCODE_D:
                     app_debug = !app_debug;
                     break;
+                case SDL_SCANCODE_UNKNOWN:
+                default:
+                break;
             }
             break;
         }
@@ -356,7 +364,6 @@ inline void app_process() {
     // Getting delta time
     previous_time = current_time;
     current_time = SDL_GetPerformanceCounter();
-    const float dt = app_get_delta_time();
 
     // Handle pausing
     if (pause){
@@ -382,7 +389,7 @@ inline void app_render() {
 inline void app_finalize() {
     SDL_CloseAudioDevice(audio_device);
 
-    for (int i = 0; i < SDL_arraysize(sounds); i++) {
+    for (int i = 0; i < arraysize(sounds); i++) {
         if (sounds[i].stream) {
             SDL_DestroyAudioStream(sounds[i].stream);
         }

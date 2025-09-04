@@ -24,6 +24,8 @@ extern void score(void);
 
 extern void pong_initialize();
 
+extern void pong_reset();
+
 extern void pong_process();
 
 extern void pong_render();

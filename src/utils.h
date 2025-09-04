@@ -14,6 +14,11 @@
 #include <SDL3/SDL_rect.h>
 
 #define var2str(var) #var
+#ifndef SDL3
+#define arraysize(array) (sizeof(array)/sizeof(typeof(array)))
+#else
+#define arraysize(array) SDL_arraysize(array)
+#endif
 
 typedef struct
 {

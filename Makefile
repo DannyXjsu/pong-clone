@@ -1,7 +1,9 @@
 # tool macros
-CC ?= gcc # FILL: the compiler
-CXX ?= gcc # FILL: the compiler
-CFLAGS := -lSDL3 -O2 # FILL: compile flags
+CC ?= gcc
+CXX ?= g++
+CSTD=gnu23
+LIBSDL=SDL3
+CFLAGS := -std=$(CSTD) -l$(LIBSDL) -O2 --define-macro=$(LIBSDL)
 CXXFLAGS := # FILL: compile flags
 DBGFLAGS := -g
 COBJFLAGS := $(CFLAGS) -c
@@ -13,7 +15,7 @@ SRC_PATH := src
 DBG_PATH := debug
 
 # compile macros
-TARGET_NAME := pong # FILL: target name
+TARGET_NAME := pong
 ifeq ($(OS),Windows_NT)
 	TARGET_NAME := $(addsuffix .exe,$(TARGET_NAME))
 endif
